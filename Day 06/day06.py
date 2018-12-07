@@ -8,7 +8,7 @@ class Coord(NamedTuple):
     x: int
     y: int
 
-    def distance(self, c:Coord) -> int:
+    def distance(self, c: Coord) -> int:
         return manhattan(self, c)
 
 
@@ -20,15 +20,15 @@ class Grid(NamedTuple):
 
     def all_locations(self) -> Iterator[Coord]:
         for coord in [
-            Coord(x, y) 
-            for y in range(self.left, self.right) 
+            Coord(x, y)
+            for y in range(self.left, self.right)
             for x in range(self.top, self.bottom)
-            ]:
+        ]:
             yield coord
 
-    def is_contour(self, c:Coord) -> bool:
+    def is_contour(self, c: Coord) -> bool:
         return c.x in [self.top, self.bottom] or c.y in [self.left, self.right]
-            
+
 
 def manhattan(a: Coord, b: Coord):
     return abs(a.x - b.x) + abs(a.y - b.y)
@@ -59,14 +59,16 @@ def parse_text(text: str) -> List[Coord]:
             coords.append(Coord(int(x), int(y)))
     return coords
 
-def closest_coord(loc:Coord, coords:List[Coord]) -> Coord:
+
+def closest_coord(loc: Coord, coords: List[Coord]) -> Coord:
     closest = coords[0]
     for c in coords[1:]:
         if c.distance(loc) < closest.distance(loc):
             closest = c
     return closest
 
-def count_areas(coords:List[Coord]) -> Tuple[Coord, int]:
+
+def count_areas(coords: List[Coord]) -> Tuple[Coord, int]:
     grid = build_grid(coords)
     areas = Counter()
     infinite_areas = set()
@@ -76,14 +78,14 @@ def count_areas(coords:List[Coord]) -> Tuple[Coord, int]:
         areas[closest] += 1
         if grid.is_contour(loc):
             infinite_areas.add(closest)
-    
+
     for c in infinite_areas:
         areas[c] = 0
-    
+
     (c1, n1), (c2, n2) = areas.most_common(2)
     assert n1 > n2
     return c1, n1
-    
+
 
 TESTINPUT = """1, 1
 1, 6
@@ -97,7 +99,6 @@ test_coords = parse_text(TESTINPUT)
 count_areas(test_coords)
 
 
-
 #%%
 with open("input.txt", "r") as target:
     coords = parse_text(target.read())
@@ -107,18 +108,20 @@ count_areas(coords)
 
 #%%
 
-def count_distances(coords:List[Coord], treshold:int) -> int:
+
+def count_distances(coords: List[Coord], treshold: int) -> int:
     grid = build_grid(coords)
-    total_distance = Counter() 
+    total_distance = Counter()
     for loc in grid.all_locations():
         for coord in coords:
             total_distance[loc] += loc.distance(coord)
     values = total_distance.values()
     return len([v for v in values if v < treshold])
 
+
 count_distances(test_coords, 32)
 
 #%%
-count_distances(coords, 10_000)
+count_distances(coords, 10000)
 
 #%%
