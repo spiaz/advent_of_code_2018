@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 jupyter = "*"
 pandas = "*"
+scipy = "*"
 
 [dev-packages]
 mypy = "*"
