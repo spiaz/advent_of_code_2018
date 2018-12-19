@@ -26,7 +26,6 @@ assert power_level(122, 79, 57) == -5
 assert power_level(217, 196, 39) == 0
 assert power_level(101, 153, 71) == 4
 #%%
-#%%
 
 
 def largest_power(
@@ -59,7 +58,7 @@ largest_power(serial_number)
 #%%
 
 
-def largest_power_square(
+def largest_power_dynamic(
     serial_number, grid_size: int = 300
 ) -> Tuple[int, int, int, int]:
     squares = Counter()
@@ -85,13 +84,13 @@ def largest_power_square(
                     for i in range(x, x + win_size // 2 + 1, win_size // 2)
                     for j in range(y, y + win_size // 2 + 1, win_size // 2)
                 )
-            elif win_size % 3 == 0 and win_size >=3:
+            elif win_size % 3 == 0 and win_size >= 3:
                 squares[x, y, win_size] = sum(
                     squares[i, j, win_size // 3]
                     for i in range(x, x + win_size // 3 + 1, win_size // 3)
                     for j in range(y, y + win_size // 3 + 1, win_size // 3)
                 )
-            elif win_size % 5 == 0 and win_size >=5:
+            elif win_size % 5 == 0 and win_size >= 5:
                 squares[x, y, win_size] = sum(
                     squares[i, j, win_size // 5]
                     for i in range(x, x + win_size // 5 + 1, win_size // 5)
@@ -107,8 +106,9 @@ def largest_power_square(
     (x1, y1, s1), v1 = squares.most_common(1)
     return x1, y1, s1, v1
 
+
 # Doesn't work for some reason
-largest_power_square(18)
+largest_power_dynamic(18)
 
 #%%
 import numpy as np
@@ -134,13 +134,65 @@ def largest_power_np(serial_number, grid_size: int = 300) -> Tuple[int, int, int
             s = n
             print(x, y, s, maxv)
 
-    # ((x1, y1, s1), v1), (_, v2) = squares.most_common(2)
-    # assert v1 > v2
-    return x, y, s, maxv
+    return int(x), int(y), int(s), int(maxv)
 
 
-assert largest_power_n(18) == (90, 269, 16, 113)
+#%%
+assert largest_power_np(18) == (90, 269, 16, 113)
 assert largest_power_np(42) == (232, 251, 12, 119)
 #%%
-largest_power_n(7803)
+largest_power_np(7803)
+#%%
+
+# Using summed area table
+# Not correct either...
+
+def largest_power_sat(serial_number, grid_size: int = 300) -> Tuple[int, int, int, int]:
+    powers = np.array(
+        [
+            [power_level(x, y, serial_number) for x in range(grid_size)]
+            for y in range(grid_size)
+        ]
+    )
+
+    sat = np.zeros((grid_size, grid_size))
+    sat[0, 0] = powers[0, 0]
+    for i in range(1, grid_size):
+        sat[0, i] = powers[0, i] + sat[0, i - 1]
+        sat[i, 0] = powers[i, 0] + sat[i - 1, 0]
+
+    for i, j in [(i, j) for j in range(1, grid_size) for i in range(1, grid_size)]:
+        sat[i, j] = powers[i, j] + sat[i, j - 1] + sat[i - 1, j] - sat[i - 1, j - 1]
+    
+    print(powers[:5, :5])
+    print(sat[:5, :5])
+    max_val = float("-inf")
+    candidates = (0, 0, 0)
+
+    for win_size in range(0, grid_size):
+        for i, j in [
+            (i, j)
+            for i in range(win_size, grid_size)
+            for j in range(win_size, grid_size)
+        ]:
+            left = sat[i, j - win_size]
+            up = sat[i - win_size, j]
+            diag = sat[i - win_size, j - win_size]
+
+            val = sat[i, j] - left - up + diag
+
+            if val > max_val:
+                max_val = val
+                candidates = (i - win_size, j - win_size, win_size + 1)
+
+    x, y, s = candidates
+    return int(x), int(y), int(s), int(max_val)
+
+
+assert largest_power_sat(18) == (90, 269, 16, 113)
+assert largest_power_sat(42) == (232, 251, 12, 119)
+
+#%%
+largest_power_sat(18, grid_size = 3)
+
 #%%
